@@ -1,8 +1,9 @@
 import os
+from dataclasses import dataclass
 
 from dotenv import load_dotenv
 from loop import loop
-from openrouter import OpenRouter, dataclass
+from openrouter import OpenRouter
 
 load_dotenv()
 
