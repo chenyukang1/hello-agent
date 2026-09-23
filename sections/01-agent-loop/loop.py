@@ -24,7 +24,7 @@ def loop(messages, model, max_steps=10):
         messages.append({"role": "assistant", "content": response.content})
 
         if response.finish_reason != "tool_calls":
-            return final_text(response)
+            return response.content
 
         if response.tool_calls:
             for tool_call in response.tool_calls:
@@ -36,8 +36,4 @@ def loop(messages, model, max_steps=10):
                     }
                 )
 
-    return RuntimeError("fetch max steps")
-
-
-def final_text(response):
-    return "".join(response.content)
+    raise RuntimeError("Error: fetch max steps")
