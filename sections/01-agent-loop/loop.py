@@ -30,7 +30,7 @@ def loop(messages, model, max_steps=10):
             for tool_call in response.tool_calls:
                 messages.append(
                     {
-                        "type": "tool",
+                        "role": "tool",
                         "tool_call_id": tool_call.id,
                         "content": run_tool(tool_call.name, tool_call.input),
                     }
