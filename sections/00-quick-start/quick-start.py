@@ -4,7 +4,13 @@ from pathlib import Path
 from typing import Annotated
 
 from dotenv import load_dotenv
-from langchain.messages import AnyMessage, HumanMessage, SystemMessage, ToolMessage
+from langchain.messages import (
+    AIMessage,
+    AnyMessage,
+    HumanMessage,
+    SystemMessage,
+    ToolMessage,
+)
 from langchain.tools import tool
 from langchain_openrouter import ChatOpenRouter
 from langgraph.graph import END, START, StateGraph
@@ -104,7 +110,7 @@ def should_continue(state: MessagesState):
     messages = state["messages"]
     last_message = messages[-1]
 
-    if last_message.tool_calls:
+    if last_message is AIMessage and last_message.tool_calls:
         return "tool_node"
 
     return END
