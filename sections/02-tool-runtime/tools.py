@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 
@@ -8,7 +8,7 @@ class Tool:
     name: str
     run: Callable[[dict], Any]
     description: str = ""
-    input_shcema: dict = {}
+    input_schema: dict = field(default_factory=dict)
     is_read_only: bool = False
     is_edit: bool = False
 
