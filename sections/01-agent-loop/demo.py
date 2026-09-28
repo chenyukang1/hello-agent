@@ -1,9 +1,7 @@
-import os
-from dataclasses import dataclass
-
 from dotenv import load_dotenv
 from loop import loop
-from openrouter import OpenRouter
+
+from schema.openrouter import call_model
 
 load_dotenv()
 
@@ -17,7 +15,6 @@ tools = [
     },
 ]
 
-client = OpenRouter(api_key=os.getenv("OPENROUTER_API_KEY"))
 
 TURNS = [
     "What time is it right now? Answer in one sentence.",
@@ -25,49 +22,11 @@ TURNS = [
 ]
 
 
-@dataclass
-class ToolCall:
-    id: str
-    name: str
-    input: str
-
-
-@dataclass
-class ModelReply:
-    finish_reason: str | None
-    content: str | None
-    tool_calls: list[ToolCall]
-
-
 def demo():
-    def model(messages):
-        response = client.chat.send(
-            max_tokens=1024,
-            messages=messages,
-            model="xiaomi/mimo-v2.6-flash",
-            tools=tools,
-            tool_choice="auto",
-        )
-
-        tool_calls = []
-        if response.choices[0].message.tool_calls:
-            tool_calls = [
-                ToolCall(
-                    id=call.id, name=call.function.name, input=call.function.arguments
-                )
-                for call in response.choices[0].message.tool_calls
-            ]
-
-        return ModelReply(
-            finish_reason=response.choices[0].finish_reason,
-            content=response.choices[0].message.content,
-            tool_calls=tool_calls,
-        )
-
     messages = []
     for turn in TURNS:
         messages.append({"role": "user", "content": turn})
-        reply = loop(messages=messages, model=model)
+        reply = loop(messages=messages, tools=tools, call_model=call_model)
         print("you ->", turn)
         print("01 agent_loop ->", reply)
 
