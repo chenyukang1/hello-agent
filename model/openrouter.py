@@ -1,22 +1,8 @@
 import os
-from dataclasses import dataclass
 
 from openrouter import OpenRouter
 
-
-@dataclass
-class ToolCall:
-    id: str
-    name: str
-    input: str
-
-
-@dataclass
-class ModelReply:
-    finish_reason: str | None
-    content: str | None
-    tool_calls: list[ToolCall]
-
+from schema.message import ModelReply, ToolCall
 
 client = OpenRouter(api_key=os.getenv("OPENROUTER_API_KEY"))
 model = os.getenv("OPENROUTER_API_MODEL", "xiaomi/mimo-v2.6-flash")
@@ -24,13 +10,30 @@ model = os.getenv("OPENROUTER_API_MODEL", "xiaomi/mimo-v2.6-flash")
 
 # openrouter call
 def call_model(messages, tools):
+    # tool protocol conversion
+    api_tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": tool["name"],
+                "description": tool["description"],
+                "parameters": tool["input_schema"],
+            },
+        }
+        for tool in tools
+    ]
+
+    print(f"[openrouter] send messages: {messages}, tools: {api_tools}")
+
     response = client.chat.send(
         max_tokens=1024,
         messages=messages,
         model="xiaomi/mimo-v2.6-flash",
-        tools=tools,
+        tools=api_tools,
         tool_choice="auto",
     )
+
+    print(f"[openrouter] response: {response}")
 
     tool_calls = []
     if response.choices[0].message.tool_calls:

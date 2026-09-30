@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["schema", "schema.*"]
+include = ["schema", "schema.*", "model", "model.*"]
 
 [project]
 name = "hello-agent"
