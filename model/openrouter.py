@@ -9,7 +9,7 @@ model = os.getenv("OPENROUTER_API_MODEL", "xiaomi/mimo-v2.6-flash")
 
 
 # openrouter call
-def call_model(messages, tools):
+def call_model(messages, tools) -> ModelReply:
     # tool protocol conversion
     api_tools = [
         {
@@ -38,7 +38,12 @@ def call_model(messages, tools):
     tool_calls = []
     if response.choices[0].message.tool_calls:
         tool_calls = [
-            ToolCall(id=call.id, name=call.function.name, input=call.function.arguments)
+            ToolCall(
+                id=call.id,
+                type=call.type,
+                name=call.function.name,
+                input=call.function.arguments,
+            )
             for call in response.choices[0].message.tool_calls
         ]
 
