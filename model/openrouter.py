@@ -1,8 +1,11 @@
 import os
 
+from dotenv import load_dotenv
 from openrouter import OpenRouter
 
 from schema.message import ModelReply, ToolCall
+
+load_dotenv()
 
 client = OpenRouter(api_key=os.getenv("OPENROUTER_API_KEY"))
 model = os.getenv("OPENROUTER_API_MODEL", "xiaomi/mimo-v2.6-flash")
@@ -28,7 +31,7 @@ def call_model(messages, tools) -> ModelReply:
     response = client.chat.send(
         max_tokens=1024,
         messages=messages,
-        model="xiaomi/mimo-v2.6-flash",
+        model=model,
         tools=api_tools,
         tool_choice="auto",
     )
