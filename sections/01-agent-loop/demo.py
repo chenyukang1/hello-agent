@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from loop import loop
 
-from schema.openrouter import call_model
+from model.openrouter import call_model
 
 load_dotenv()
 

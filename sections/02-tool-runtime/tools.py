@@ -31,5 +31,5 @@ class Registry:
                 "description": tool.description,
                 "input_schema": tool.input_schema,
             }
-            for tool in self._tools
+            for tool in self._tools.values()
         ]

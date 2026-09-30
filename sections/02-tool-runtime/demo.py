@@ -1,7 +1,7 @@
 from loop import loop
 from tools import Registry, Tool
 
-from schema.openrouter import call_model
+from model.openrouter import call_model
 
 
 def find_file(file_name):
@@ -19,12 +19,15 @@ def demo():
         run=find_file,
         description="Obtain the content of file.",
         input_schema={
-            "type": "function",
-            "function": {
-                "name": "find_file",
-                "description": "Return the current UTC time as an ISO 8601 string.",
+            "type": "object",
+            "properties": {
+                "file_name": {
+                    "type": "string",
+                    "description": "Path of the file to read",
+                }
             },
-            "parameters": {"file_name": ""},
+            "required": ["file_name"],
+            "additionalProperties": False,
         },
     )
     registry = Registry()
@@ -36,3 +39,7 @@ def demo():
         reply = loop(messages, call_model=call_model, registry=registry)
         print(f"you -> {turn}")
         print(f"02 tool-runtime -> {reply}")
+
+
+if __name__ == "__main__":
+    demo()

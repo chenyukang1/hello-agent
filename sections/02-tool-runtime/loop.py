@@ -3,8 +3,9 @@ from tools import Registry
 
 def loop(messages, call_model, registry: Registry, max_steps=10):
     for _ in range(max_steps):
-        response = call_model(messages)
-        messages.append({"role": "assistant", "content": response.content})
+        response = call_model(messages, tools=registry.schemas())
+        if response.content:
+            messages.append({"role": "assistant", "content": response.content})
 
         if response.finish_reason != "tool_calls":
             return response.content
