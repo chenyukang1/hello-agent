@@ -18,9 +18,9 @@ def run_tool(tool_name, input):
         return f"Error: {e}"
 
 
-def loop(messages, model, max_steps=10):
+def loop(messages, tools, call_model, max_steps=10):
     for _ in range(max_steps):
-        response = model(messages)
+        response = call_model(messages, tools)
         messages.append({"role": "assistant", "content": response.content})
 
         if response.finish_reason != "tool_calls":
