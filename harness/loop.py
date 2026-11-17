@@ -1,3 +1,4 @@
+import json
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
@@ -73,7 +74,7 @@ def to_assistant_message(response):
 
 
 def execute_tool_call(tool: Tool | None, tool_call: ToolCall, mode, allow_rules, approver, hooks: Hooks):
-    name, args = tool_call.name, tool_call.input
+    name, args = tool_call.name, json.loads(tool_call.input)
     if tool is None:
         return f"Error: no tool {name}"
 

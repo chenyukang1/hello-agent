@@ -11,17 +11,17 @@ TURNS = [
 
 
 def demo():
+    session = Session(mode=permissions.DEFAULT)
+
     registry = Registry()
-    registry.register(tool=todo_tool)
-    registry.register(tool=exit_plan_mode)
+    registry.register(tool=todo_tool(session))
+    registry.register(tool=exit_plan_mode(session))
 
     debug_hooks = Hooks()
     debug_hooks.register(hooks.PRE_TOOL_USE, lambda name, args: print(f"[debug] tool used {name} with {args}"))
     debug_hooks.register(
         hooks.POST_TOOL_USE, lambda name, args, res: print(f"[debug] tool {name} with {args} res: {res}")
     )
-
-    session = Session(mode=permissions.DEFAULT)
 
     messages = []
     for turn in TURNS:
@@ -32,4 +32,11 @@ def demo():
 
 
 if __name__ == "__main__":
+    # args = {
+    #     "todos": [
+    #         {"step": "Clear and wipe down countertops, stove, and sink", "status": "pending"},
+    #         {"step": "Sweep and mop the floor", "status": "pending"},
+    #     ]
+    # }
+    # print(list(args["todos"]))
     demo()

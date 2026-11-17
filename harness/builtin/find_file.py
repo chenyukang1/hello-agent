@@ -23,7 +23,7 @@ def find_file_tool(args):
         return "hello, agent"
 
     return Tool(
-        "find file",
+        "FindFile",
         run=find_file,
         description="Obtain the content of file.",
         input_schema={
