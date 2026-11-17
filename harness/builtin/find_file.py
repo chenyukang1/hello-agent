@@ -15,7 +15,7 @@ FIND_FILE_SCHMEA = (
 )
 
 
-def find_file_tool(args):
+def find_file_tool() -> Tool:
     """find files"""
 
     def find_file(file_name):
