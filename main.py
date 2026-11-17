@@ -1,50 +1,34 @@
-from harness import PLAN, POST_TOOL_USE, PRE_TOOL_USE
+from harness import hooks, permissions
+from harness.builtin import exit_plan_mode, todo_tool
 from harness.hooks import Hooks
-from harness.loop import loop
-from harness.tools import Registry, Tool
+from harness.loop import Session, loop
+from harness.tools import Registry
 from model.openrouter import call_model
 
-
-def find_file(file_name):
-    return "hello, agent"
-
-
 TURNS = [
-    "What's the content of a.txt?",
+    "Make a 2-step todo list for cleaning a kitchen, then say done.",
 ]
 
 
 def demo():
-    tool = Tool(
-        "find_file",
-        run=find_file,
-        description="Obtain the content of file.",
-        input_schema={
-            "type": "object",
-            "properties": {
-                "file_name": {
-                    "type": "string",
-                    "description": "Path of the file to read",
-                }
-            },
-            "required": ["file_name"],
-            "additionalProperties": False,
-        },
-        is_read_only=True,
-    )
     registry = Registry()
-    registry.register(tool=tool)
+    registry.register(tool=todo_tool)
+    registry.register(tool=exit_plan_mode)
 
-    hooks = Hooks()
-    hooks.register(PRE_TOOL_USE, lambda name, args: print(f"[debug] tool used {name} with {args}"))
-    hooks.register(POST_TOOL_USE, lambda name, args, res: print(f"[debug] tool {name} with {args} res: {res}"))
+    debug_hooks = Hooks()
+    debug_hooks.register(hooks.PRE_TOOL_USE, lambda name, args: print(f"[debug] tool used {name} with {args}"))
+    debug_hooks.register(
+        hooks.POST_TOOL_USE, lambda name, args, res: print(f"[debug] tool {name} with {args} res: {res}")
+    )
+
+    session = Session(mode=permissions.DEFAULT)
 
     messages = []
     for turn in TURNS:
         messages.append({"role": "user", "content": turn})
-        reply = loop(messages, call_model=call_model, registry=registry, mode=PLAN, hooks=hooks)
+        reply = loop(messages, call_model=call_model, registry=registry, session=session, hooks=debug_hooks)
         print(f"you -> {turn}")
-        print(f"02 tool-runtime -> {reply}")
+        print(f"model -> {reply}")
 
 
 if __name__ == "__main__":

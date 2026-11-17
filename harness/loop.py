@@ -1,24 +1,32 @@
 from collections.abc import Callable
+from dataclasses import dataclass, field
+
+from schema.message import ModelReply, ToolCall
 
 from . import permissions
 from .hooks import Hooks
 from .tools import Registry, Tool
 
-from schema.message import ModelReply, ToolCall
+
+@dataclass
+class Session:
+    """Mutable harness state that outlives a turn."""
+
+    mode: str = permissions.DEFAULT
+    allow_rules: set = field(default_factory=set)
+    todos: list = field(default_factory=list)
 
 
 def loop(
     messages: list,
     call_model: Callable[..., ModelReply],
     registry: Registry,
-    allow_rules: set | None = None,
+    session: Session,
     approver: Callable[..., bool] | None = None,
     hooks: Hooks = None,
-    mode=permissions.DEFAULT,
     max_steps=10,
 ):
     hooks = hooks or Hooks()
-    allow_rules = allow_rules or set()
     approver = approver or (lambda name, args: False)
 
     for _ in range(max_steps):
@@ -34,7 +42,7 @@ def loop(
 
         for tool_call in response.tool_calls:
             tool = registry.get(tool_call.name)
-            content = execute_tool_call(tool, tool_call, mode, allow_rules, approver, hooks)
+            content = execute_tool_call(tool, tool_call, session.mode, session.allow_rules, approver, hooks)
             messages.append(
                 {
                     "role": "tool",
