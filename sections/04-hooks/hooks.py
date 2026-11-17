@@ -17,7 +17,7 @@ class Hooks:
         """register hooks"""
         if event not in self._events:
             raise RuntimeError(f"Error: {event} not allowed")
-        self._hooks[event] = fn
+        self._hooks[event].append(fn)
 
     def fire_pre(self, name, args):
         """hooks before permission gate"""
@@ -27,9 +27,9 @@ class Hooks:
                 args = res["updated_args"]
             if res.get("deny"):
                 return True, args, res.get("message")
-            return False, args, ""
+        return False, args, ""
 
-    def fire_post(self, name, args):
+    def fire_post(self, name, args, result):
         """hooks after tool use"""
         for fn in self._hooks["PostToolUse"]:
-            fn(name, args)
+            fn(name, args, result)

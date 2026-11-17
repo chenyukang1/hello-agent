@@ -1,20 +1,23 @@
 from collections.abc import Callable
 
 import permissions
+from hooks import Hooks
 from tools import Registry, Tool
 
-from schema.message import ModelReply
+from schema.message import ModelReply, ToolCall
 
 
 def loop(
     messages: list,
     call_model: Callable[..., ModelReply],
     registry: Registry,
+    allow_rules: set | None = None,
+    approver: Callable[..., bool] | None = None,
+    hooks: Hooks = None,
     mode=permissions.DEFAULT,
-    allow_rules=None,
-    approver=None,
     max_steps=10,
 ):
+    hooks = hooks or Hooks()
     allow_rules = allow_rules or set()
     approver = approver or (lambda name, args: False)
 
@@ -31,7 +34,7 @@ def loop(
 
         for tool_call in response.tool_calls:
             tool = registry.get(tool_call.name)
-            content = execute_tool_call(tool, tool_call, mode, approver, allow_rules)
+            content = execute_tool_call(tool, tool_call, mode, allow_rules, approver, hooks)
             messages.append(
                 {
                     "role": "tool",
@@ -61,15 +64,22 @@ def to_assistant_message(response):
     return assistant_message
 
 
-def execute_tool_call(tool: Tool | None, tool_call, mode, allow_rules, approver):
+def execute_tool_call(tool: Tool | None, tool_call: ToolCall, mode, allow_rules, approver, hooks: Hooks):
+    name, args = tool_call.name, tool_call.input
     if tool is None:
-        return f"Error: no tool {tool_call.name}"
+        return f"Error: no tool {name}"
+
+    blocked, args, message = hooks.fire_pre(name, args)
+    if blocked:
+        return message
 
     decision = permissions.decide(tool, mode, allow_rules)
     if decision == "deny":
-        return f"{tool_call.name} not allowed in {mode} mode"
+        return f"{name} not allowed in {mode} mode"
 
-    if decision == "ask" and not approver(tool_call.name, tool_call.input):
-        return f"{tool_call.name} denied by user"
+    if decision == "ask" and not approver(name, args):
+        return f"{name} denied by user"
 
-    return str(tool.run(tool_call.input))
+    res = str(tool.run(args))
+    hooks.fire_post(name, args, res)
+    return res
