@@ -19,6 +19,12 @@ def load_skills(skills_dir):
             skills.append(Skill(meta.get("name", sub.name), meta.get("description", ""), md))
 
 
+def catalog_prompt(skills: list[Skill], base_dir: str):
+    """skills catalog prompt"""
+    lines = [f"{s.name}:{s.description} (read {s.path.relative_to(base_dir)})" for s in skills]
+    return "Available skills (read a skill's path):\n" + "\n".join(lines)
+
+
 def _split(text):
     """Minimal SKILL.md parse into (frontmatter dict, body). ponytail: assumes a
     well-formed '---\\n<key: value>...\\n---\\n<body>' header (real CC uses YAML)."""
@@ -28,7 +34,3 @@ def _split(text):
         for k, v in (line.split(":", 1) for line in frontmatter.strip().splitlines() if ":" in line)
     }
     return meta, body.strip()
-
-
-if __name__ == "__main__":
-    load_skills(".")
