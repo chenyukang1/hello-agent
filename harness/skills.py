@@ -3,6 +3,8 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from harness.tools import Tool
+
 USAGE_FILE = ".usage.json"
 
 
@@ -13,7 +15,7 @@ class Skill:
     path: Path
 
 
-def load_skills(skills_dir):
+def load_skills(skills_dir: str):
     """load skills from skills_dir"""
     skills = []
     for sub in sorted(Path(skills_dir).iterdir()):
@@ -21,6 +23,34 @@ def load_skills(skills_dir):
         if md.is_file():
             meta, _body = _split(md.read_text())
             skills.append(Skill(meta.get("name", sub.name), meta.get("description", ""), md))
+
+
+def write_skill(skills_dir: str, name: str, description: str, body: str) -> Path:
+    """write skill with name in skllis dir"""
+    base_path = Path(skills_dir).resolve()
+    skill_path = (base_path / name / "SKILL.md").resolve()
+    skill_path.parent.mkdir(parents=True, exist_ok=True)
+    skill_path.write_text(f"---\nname: {name}\ndescription: {description}\n---\n{body}\n")
+    return skill_path
+
+
+def write_skill_tool(skills_dir: str) -> Tool:
+    """write skill tool"""
+
+    def write(args):
+        write_skill(skills_dir, name=args["name"], description=args["description"], body=args["body"])
+        return f"skill {args['name']!r} saved"
+
+    return Tool(
+        name="write skill",
+        run=write,
+        description="Save a reusable skill (name, description, body) for future runs.",
+        input_schema={
+            "type": "object",
+            "properties": {"name": {"type": "string"}, "description": {"type": "string"}, "body": {"type": "string"}},
+            "required": ["name", "description", "body"],
+        },
+    )
 
 
 def catalog_prompt(skills: list[Skill], base_dir: str):
