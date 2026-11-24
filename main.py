@@ -6,8 +6,8 @@ from harness import hooks, permissions
 from harness.builtin import agent_tool, find_file_tool
 from harness.builtin.read import read_tool
 from harness.hooks import Hooks
-from harness.loop import Session
-from harness.skills import load_skills, write_skill_tool
+from harness.loop import Session, loop
+from harness.skills import catalog_prompt, load_skills, write_skill_tool
 from harness.tools import Registry
 from model.openrouter import call_model
 
@@ -15,6 +15,7 @@ TURNS = [
     "Use the Agent tool to find the contetn of a.txt",
 ]
 
+SYSTEM_PROMPT = "You are a tiny agent. Use the provided tools to answer. Be brief."
 SKILLS_DIR = "./skills"
 BUNDLED = Path(__file__).resolve().parent / "skills"
 
@@ -38,15 +39,15 @@ def demo():
 
     skills_dir = Path(tempfile.mkdtemp()) / "skills"
     shutil.copytree(BUNDLED, skills_dir)
-    skills = load_skills(skills_dir=skills_dir)
-    print(skills)
+    skills = load_skills(skills_dir)
+    system_prompt = SYSTEM_PROMPT + "\n\n" + catalog_prompt(skills, skills_dir)
 
-    # messages = []
-    # for turn in TURNS:
-    #     messages.append({"role": "user", "content": turn})
-    #     reply = loop(messages, call_model=call_model, registry=parent_registry, session=session, hooks=debug_hooks)
-    #     print(f"you -> {turn}")
-    #     print(f"model -> {reply}")
+    messages = [{"role": "system", "content": system_prompt}]
+    turn = "使用 hello-test 向小明问好"
+    messages.append({"role": "user", "content": turn})
+    reply = loop(messages, call_model=call_model, registry=parent_registry, session=session, hooks=debug_hooks)
+    print(f"you -> {turn}")
+    print(f"model -> {reply}")
 
 
 if __name__ == "__main__":

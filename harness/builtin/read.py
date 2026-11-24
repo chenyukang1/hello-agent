@@ -11,7 +11,7 @@ def read_tool(base_dir):
     def read(args):
         """read file in base dir"""
         target: Path = (base / args["path"]).resolve()
-        if not target.is_relatvite_to(base):
+        if not target.is_relative_to(base):
             raise ValueError(f"path {args['path']} escapes the base dir")
         if target.name == "SKILL.md":
             record_use(base, target.parent.name)
