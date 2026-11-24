@@ -1,5 +1,9 @@
+import json
+import time
 from dataclasses import dataclass
 from pathlib import Path
+
+USAGE_FILE = ".usage.json"
 
 
 @dataclass
@@ -22,7 +26,18 @@ def load_skills(skills_dir):
 def catalog_prompt(skills: list[Skill], base_dir: str):
     """skills catalog prompt"""
     lines = [f"{s.name}:{s.description} (read {s.path.relative_to(base_dir)})" for s in skills]
-    return "Available skills (read a skill's path):\n" + "\n".join(lines)
+    return "Available skills (read a skill's path with the Read tool to load it):\n" + "\n".join(lines)
+
+
+def record_use(skills_dir: Path, name: str):
+    """函数说明。"""
+    skills_path = Path(skills_dir) / USAGE_FILE
+    usage = json.loads(skills_path.read_text()) if skills_path.exists() else {}
+    properties = usage.setdefault(name, {"uses": 0})
+    properties["uses"] += 1
+    properties["last_used_at"] = time.time()
+    skills_path.write_text(json.dumps(usage))
+    return properties
 
 
 def _split(text):
