@@ -15,7 +15,7 @@ class Skill:
     path: Path
 
 
-def load_skills(skills_dir: str):
+def load_skills(skills_dir: str) -> list[Skill]:
     """load skills from skills_dir"""
     skills = []
     for sub in sorted(Path(skills_dir).iterdir()):
@@ -23,6 +23,7 @@ def load_skills(skills_dir: str):
         if md.is_file():
             meta, _body = _split(md.read_text())
             skills.append(Skill(meta.get("name", sub.name), meta.get("description", ""), md))
+    return skills
 
 
 def write_skill(skills_dir: str, name: str, description: str, body: str) -> Path:
@@ -60,7 +61,7 @@ def catalog_prompt(skills: list[Skill], base_dir: str):
 
 
 def record_use(skills_dir: Path, name: str):
-    """函数说明。"""
+    """record `name`'s usage with uses count & last used time"""
     skills_path = Path(skills_dir) / USAGE_FILE
     usage = json.loads(skills_path.read_text()) if skills_path.exists() else {}
     properties = usage.setdefault(name, {"uses": 0})

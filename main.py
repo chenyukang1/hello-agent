@@ -1,13 +1,22 @@
+import shutil
+import tempfile
+from pathlib import Path
+
 from harness import hooks, permissions
 from harness.builtin import agent_tool, find_file_tool
+from harness.builtin.read import read_tool
 from harness.hooks import Hooks
-from harness.loop import Session, loop
+from harness.loop import Session
+from harness.skills import load_skills, write_skill_tool
 from harness.tools import Registry
 from model.openrouter import call_model
 
 TURNS = [
     "Use the Agent tool to find the contetn of a.txt",
 ]
+
+SKILLS_DIR = "./skills"
+BUNDLED = Path(__file__).resolve().parent / "skills"
 
 
 def demo():
@@ -18,6 +27,8 @@ def demo():
 
     parent_registry = Registry()
     parent_registry.register(tool=agent_tool(call_model=call_model, registry=sub_registry, parent_session=session))
+    parent_registry.register(tool=write_skill_tool(SKILLS_DIR))
+    parent_registry.register(tool=read_tool(SKILLS_DIR))
 
     debug_hooks = Hooks()
     debug_hooks.register(hooks.PRE_TOOL_USE, lambda name, args: print(f"[debug] tool used {name} with {args}"))
@@ -25,12 +36,17 @@ def demo():
         hooks.POST_TOOL_USE, lambda name, args, res: print(f"[debug] tool {name} with {args} res: {res}")
     )
 
-    messages = []
-    for turn in TURNS:
-        messages.append({"role": "user", "content": turn})
-        reply = loop(messages, call_model=call_model, registry=parent_registry, session=session, hooks=debug_hooks)
-        print(f"you -> {turn}")
-        print(f"model -> {reply}")
+    skills_dir = Path(tempfile.mkdtemp()) / "skills"
+    shutil.copytree(BUNDLED, skills_dir)
+    skills = load_skills(skills_dir=skills_dir)
+    print(skills)
+
+    # messages = []
+    # for turn in TURNS:
+    #     messages.append({"role": "user", "content": turn})
+    #     reply = loop(messages, call_model=call_model, registry=parent_registry, session=session, hooks=debug_hooks)
+    #     print(f"you -> {turn}")
+    #     print(f"model -> {reply}")
 
 
 if __name__ == "__main__":
